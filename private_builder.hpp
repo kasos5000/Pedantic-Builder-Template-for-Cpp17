@@ -14,16 +14,8 @@ public:
 	    data(other->data) {
 	}
 
-	SimplePrivateCore(Ts&&... def_args) :
-	    data(std::make_shared(std::tuple<Ts...>{std::forward<Ts>(def_args)...})) { /*1*/
-	}
-
 	template<size_t I>
-	inline auto&& GetArg() {
-		return std::get<I>(*data);
-	}
-	template<size_t I>
-	inline const auto& GetArg() const {
+	inline auto&& GetArg() const {
 		return std::get<I>(*data);
 	}
 
@@ -34,6 +26,3 @@ protected:
 private:
 	std::shared_ptr<std::tuple<Ts...>> data;
 };
-
-/*1 If you'd like to use a core with rvalue-references you have to use this constructur*/
-
