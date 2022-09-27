@@ -17,30 +17,18 @@ public:
 	using Core::Core;
 
 	template<typename TargetType, class Option = pbt::none, size_t... MoveIdx>
-	auto Construct() {
-		return ConstructInner<TargetType, Option, PBT_Inner::MoveSelector<MoveIdx...>>(std::make_index_sequence<SettingProgress>());
-	}
-	template<typename TargetType, class Option = pbt::none, size_t... MoveIdx>
 	auto Construct() const {
-		return ConstructInner<TargetType, Option, PBT_Inner::MoveSelector<MoveIdx...>>(std::make_index_sequence<SettingProgress>());
+		return ConstructInner<TargetType, Option, MoveIdx...>(std::make_index_sequence<SettingProgress>());
 	}
 
-	template<typename TargetType, class Option = pbt::none, size_t... MoveIdx>
-	auto ConstructNew() {
-		return ConstructNewInner<TargetType, Option, PBT_Inner::MoveSelector<MoveIdx...>>(std::make_index_sequence<SettingProgress>());
-	}
 	template<typename TargetType, class Option = pbt::none, size_t... MoveIdx>
 	auto ConstructNew() const {
-		return ConstructNewInner<TargetType, Option, PBT_Inner::MoveSelector<MoveIdx...>>(std::make_index_sequence<SettingProgress>());
+		return ConstructNewInner<TargetType, Option, MoveIdx...>(std::make_index_sequence<SettingProgress>());
 	}
 
 	template<class Option = pbt::none, size_t... MoveIdx, typename Func>
-	decltype(auto) Invoke(Func&& func) {
-		return InvokeInner<Option, PBT_Inner::MoveSelector<MoveIdx...>>(func, std::make_index_sequence<SettingProgress>());
-	}
-	template<class Option = pbt::none, size_t... MoveIdx, typename Func>
 	decltype(auto) Invoke(Func&& func) const {
-		return InvokeInner<Option, PBT_Inner::MoveSelector<MoveIdx...>>(func, std::make_index_sequence<SettingProgress>());
+		return InvokeInner<Option, MoveIdx...>(func, std::make_index_sequence<SettingProgress>());
 	}
 
 protected:
@@ -59,8 +47,9 @@ private:
 		return FinalBuilder<Marks...>(ptr);
 	}
 
-	template<size_t I, typename Selector_>
-	auto&& MoveIfSelected() {
+	template<size_t I, size_t... MoveIdx>
+	auto&& MoveIfSelected() const {
+		using Selector_ = MoveSelector<MoveIdx...>;
 		if constexpr (Selector_::IsEmpty()) {
 			return std::move(this->template GetArg<I>());
 		} else if constexpr (Selector_::template ListHasIndex<I>()) {
@@ -74,43 +63,31 @@ private:
 		}
 	}
 
-	template<typename TargetType, class Option, class Selector_, size_t... Idx>
-	auto ConstructInner(std::index_sequence<Idx...>) {
+	template<typename TargetType, class Option, size_t... MoveIdx, size_t... Idx>
+	auto ConstructInner(std::index_sequence<Idx...>) const {
 		if constexpr (std::is_same_v<Option, pbt::none>) {
 			return TargetType(this->template GetArg<Idx>()...);
 		} else {
-			return TargetType(MoveIfSelected<Idx, Selector_>()...);
+			return TargetType(MoveIfSelected<Idx, MoveIdx...>()...);
 		}
 	}
-	template<typename TargetType, class Option, class Selector_, size_t... Idx>
-	auto ConstructInner(std::index_sequence<Idx...>) const {
-		return TargetType(this->template GetArg<Idx>()...);
-	}
 
-	template<typename TargetType, class Option, class Selector_, size_t... Idx>
-	auto ConstructNewInner(std::index_sequence<Idx...>) {
+	template<typename TargetType, class Option, size_t... MoveIdx, size_t... Idx>
+	auto ConstructNewInner(std::index_sequence<Idx...>) const {
 		if constexpr (std::is_same_v<Option, pbt::none>) {
 			return new TargetType(this->template GetArg<Idx>()...);
 		} else {
-			return new TargetType(MoveIfSelected<Idx, Selector_>()...);
+			return new TargetType(MoveIfSelected<Idx, MoveIdx...>()...);
 		}
 	}
-	template<typename TargetType, class Option, class Selector_, size_t... Idx>
-	auto ConstructNewInner(std::index_sequence<Idx...>) const {
-		return new TargetType(this->template GetArg<Idx>()...);
-	}
 
-	template<class Option, class Selector_, typename Func, size_t... Idx>
-	decltype(auto) InvokeInner(Func&& func, std::index_sequence<Idx...>) {
+	template<class Option, size_t... MoveIdx, typename Func, size_t... Idx>
+	decltype(auto) InvokeInner(Func&& func, std::index_sequence<Idx...>) const {
 		if constexpr (std::is_same_v<Option, pbt::none>) {
 			return func(this->template GetArg<Idx>()...);
 		} else {
-			return func(MoveIfSelected<Idx, Selector_>()...);
+			return func(MoveIfSelected<Idx, MoveIdx...>()...);
 		}
-	}
-	template<class Option, class Selector_, typename Func, size_t... Idx>
-	decltype(auto) InvokeInner(Func&& func, std::index_sequence<Idx...>) const {
-		return func(this->template GetArg<Idx>()...);
 	}
 };
 } // namespace PBT_Inner
