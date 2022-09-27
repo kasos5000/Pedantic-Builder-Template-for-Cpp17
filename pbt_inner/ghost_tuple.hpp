@@ -34,9 +34,6 @@ class GhostTuple<> {
 };
 
 namespace std {
-template<std::size_t I, class T>
-struct tuple_element;
-
 template<std::size_t I, class Head, class... Tail>
 struct tuple_element<I, GhostTuple<Head, Tail...>> : std::tuple_element<I - 1, GhostTuple<Tail...>> {};
 
@@ -44,9 +41,6 @@ template<class Head, class... Tail>
 struct tuple_element<0, GhostTuple<Head, Tail...>> {
 	using type = Head;
 };
-
-template<class T>
-struct tuple_size;
 
 template<class... Types>
 struct tuple_size<GhostTuple<Types...>> : std::integral_constant<size_t, sizeof...(Types)> {};
