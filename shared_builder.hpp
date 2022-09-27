@@ -17,14 +17,11 @@ public:
 
 protected:
 	~SimpleSharedCore() = default;
-	template<size_t I> using ArgType = std::tuple_element_t<I, std::tuple<Ts...>>;
 
 private:
 	inline static std::tuple<Ts...> data;
 };
 
-/*The following core is even more static. It proves more stable when used with rvalue-references as parameters. But be carefull when somethigh another uses
-the same instantiation of GhostTuple. */
 template<typename... Ts>
 class FullySharedCore {
 public:
